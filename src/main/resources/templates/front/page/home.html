@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Home Page</title>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 在DOM完全加载后运行
+
+            const userDataString = sessionStorage.getItem('userData');
+
+            if (userDataString) {
+                const userData = JSON.parse(userDataString);
+
+                // 现在你可以使用userData对象了
+                console.log('User Data:', userData);
+
+                // 示例：显示用户名
+                document.getElementById('name').textContent = userData.data.name;
+
+                // 其他操作...
+            }
+        });
+    </script>
+</head>
+<body>
+<h1>Welcome to Home Page</h1>
+<p>Your username is: <span id="name"></span></p>
+<!-- 页面其他内容 -->
+</body>
+</html>

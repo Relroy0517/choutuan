@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>店铺列表</title>
+    <style>
+        /* 隐藏模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+
+        /* 模态框中的内容 */
+        .modal-content {
+            background-color: #fefefe;
+            margin: 15% auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+    <style>
+        #leftMenu {
+            width: 200px;
+            float: left;
+        }
+        #rightContent {
+            margin-left: 200px;
+        }
+        .page {
+            display: none;
+        }
+        .page.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Welcome to Home Page</h1>
+<p>Your username is: <span id="name"></span></p>
+<p>Your soid is: <span id="soid"></span></p>
+<div id="leftMenu">
+    <ul>
+        <li><a href="#" data-page="page1">A</a></li>
+        <li><a href="#" data-page="page2">B</a></li>
+        <li><a href="#" data-page="ShopPage">我的店铺</a></li>
+        <li><a href="#" data-page="registrationPage">注册</a></li>
+        <li><a href="#" data-page="MealListPage">菜品</a></li>
+
+    </ul>
+</div>
+
+<div id="rightContent">
+    <div class="page" id="page1">
+        <h2>Page A</h2>
+        <p>This is the content for page A.</p>
+    </div>
+    <div class="page" id="page2">
+        <h2>Page B</h2>
+        <p>This is the content for page B.</p>
+    </div>
+    <div class="page" id="ShopPage">
+        <h2>店铺列表</h2>
+        <table id="shop-list">
+            <thead>
+            <tr>
+                <th>店名</th>
+                <th>地址</th>
+                <th>描述</th>
+                <th>电话</th>
+            </tr>
+            </thead>
+            <tbody id="shop-list-body">
+            </tbody>
+        </table>
+        <div id="pagination">
+            <button id="prev-page">上一页</button>
+            <span id="current-page">1</span>
+            <button id="next-page">下一页</button>
+        </div>
+    </div>
+
+
+    <!-- 新增添加页面 -->
+    <div class="page" id="registrationPage">
+        <h2>店铺添加</h2>
+        <form id="registrationForm">
+            <label for="shopname">店名:</label>
+            <input type="text" id="shopname" name="shopname" required>
+            <br><br>
+            <label for="phone">电话号码:</label>
+            <input type="tel" id="phone" name="phone" required>
+            <br><br>
+            <label for="label">标签:</label>
+            <input type="text" id="label" name="label" required>
+            <br><br>
+            <label for="address">地址:</label>
+            <input type="text" id="address" name="address" required>
+            <br><br>
+            <button type="submit">添加</button>
+            <br><br>
+        </form>
+    </div>
+    <div class="page" id="MealListPage">
+        <button id="openModalBtn">添加菜品</button>
+        <h2>菜品列表</h2>
+    <table id="meal-list">
+        <thead>
+        <tr>
+            <th>菜名</th>
+            <th>描述</th>
+            <th>价格</th>
+            <th>图片</th>
+        </tr>
+        </thead>
+        <tbody id="meal-list-body">
+        </tbody>
+    </table>
+    <div id="meal-pagination">
+        <button id="meal-prev-page">上一页</button>
+        <span id="meal-current-page">1</span>
+        <button id="meal-next-page">下一页</button>
+    </div>
+</div>
+
+</div>
+
+<!-- 模态框 -->
+<div id="myModal" class="modal">
+    <div class="modal-content">
+        <!-- 表单内容 -->
+        <form id="mealForm">
+            <label for="mealname">菜名:</label><br>
+            <input type="text" id="mealname" name="mealname"><br>
+            <label for="mealprice">价格:</label><br>
+            <input type="number" id="mealprice" name="mealprice"><br>
+            <label for="description">描述:</label><br>
+            <input type="text" id="description" name="description"><br>
+            <label for="img">图片:</label><br>
+            <input type="text" id="img" name="img"><br>
+            <input type="submit" value="提交">
+        </form>
+    </div>
+</div>
+
+<script>
+
+<!--    添加菜品弹窗-->
+    document.addEventListener('DOMContentLoaded', function() {
+
+        // 获取按钮
+        var btn = document.getElementById("openModalBtn");
+        // 获取模态框
+        var modal = document.getElementById("myModal");
+
+        // 当用户点击按钮时，打开模态框
+        btn.onclick = function () {
+            modal.style.display = "block";
+        }
+
+        // 当用户点击模态框外面时，关闭模态框
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    });
+    document.addEventListener('DOMContentLoaded', function() {
+        var links = document.querySelectorAll('#leftMenu a');
+        var pages = document.querySelectorAll('#rightContent .page');
+
+        // 初始化第一个页面为活动状态
+        pages[0].classList.add('active');
+
+        links.forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                removeAllActiveClasses();
+                // 根据链接的数据属性找到并显示正确的页面
+                var targetPageId = this.getAttribute('data-page');
+                document.getElementById(targetPageId).classList.add('active');
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+        // 在DOM完全加载后运行
+        const userDataString = sessionStorage.getItem('userData');
+
+        if (userDataString) {
+            const userData = JSON.parse(userDataString);
+
+            // 现在你可以使用userData对象了
+            console.log('User Data:', userData);
+            window.globalSoid = userData.data.soid;
+            // 示例：显示用户名
+            document.getElementById('name').textContent = userData.data.name;
+            document.getElementById('soid').textContent = userData.data.soid;
+
+            // 其他操作...
+        }
+    });
+
+    document.getElementById('registrationForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // 阻止表单的默认提交行为
+
+        // 获取表单数据
+        const name = document.getElementById('shopname').value;
+        const phone = document.getElementById('phone').value;
+        const label = document.getElementById('label').value;
+        const add = document.getElementById('address').value;
+
+        // 创建JSON数据
+        const userData = {
+            name: name,
+            phone: phone,
+            label: label,
+            address:add,
+            soid:globalSoid
+        };
+
+        // 转换为JSON字符串
+        const jsonData = JSON.stringify(userData);
+
+        // 发送POST请求到后端
+        fetch('/Shop/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: jsonData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 1) {
+                    alert('添加成功！');
+                    // 这里可以添加重定向到登录页面的代码
+                } else {
+                    alert(data.sid);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('注册时发生错误，请稍后再试');
+                alert(data.code);
+
+            });
+    });
+
+    document.getElementById('mealForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // 阻止表单的默认提交行为
+
+        // 获取表单数据
+        const name = document.getElementById('mealname').value;
+        const price = document.getElementById('mealprice').value;
+        const description = document.getElementById('description').value;
+        const img = document.getElementById('img').value;
+        const sid=window.sid;
+
+        // 创建JSON数据
+        const mealData = {
+            name: name,
+            price: price,
+            description: description,
+            img:img,
+            sid:sid
+        };
+
+        // 转换为JSON字符串
+        const jsonData = JSON.stringify(mealData);
+
+        // 发送POST请求到后端
+        fetch('/Meal/register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: jsonData
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.code === 1) {
+                    alert('添加成功！');
+                    // 这里可以添加重定向到登录页面的代码
+                } else {
+                    alert(data.mid);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('注册时发生错误，请稍后再试');
+                alert(data.code);
+
+            });
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const shopListBody = document.getElementById('shop-list-body');
+        const prevPageBtn = document.getElementById('prev-page');
+        const nextPageBtn = document.getElementById('next-page');
+        const currentPageSpan = document.getElementById('current-page');
+
+        let currentPage = 1;//当前页数
+        let pageSize=5;//页面大小
+        function loadShops(page) {
+            fetch(`/Shop/page?page=${page}&pageSize=${pageSize}&soid=${globalSoid}`, {
+                method: 'GET', // 明确指定请求方法
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // alert(data)
+                    const pageInfo = data.data; // 假设后端返回的数据直接就是一个 Page 对象的 JSON 表示
+                    const records = pageInfo.records || [];
+                    currentPage=page;
+                    currentPageSpan.textContent = currentPage;
+                    window.totalPages = Math.ceil(data.total / pageSize); // 计算总页数
+                    if (Array.isArray(records)) {
+                        renderShops(records);
+                    } else {
+                        console.error('Invalid data format or missing records.');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching shops:', error);
+                });
+        }
+
+        function renderShops(shops) {
+            shopListBody.innerHTML = '';
+            shops.forEach(shop => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                <td><a href="#"  data-page="MealListPage" data-sid=${shop.sid} >${shop.name}</a></td>
+                <td>${shop.address}</td>
+                <td>${shop.label}</td>
+                <td>${shop.phone}</td>
+            `;
+                shopListBody.appendChild(row);
+            });
+            document.querySelectorAll('#shop-list-body a').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var targetPageId = this.getAttribute('data-page');
+                    removeAllActiveClasses();
+                    document.getElementById(targetPageId).classList.add('active');
+                    fetchMeals(this.dataset.sid, 1);
+                });
+            });
+        }
+
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                loadShops(currentPage - 1);
+            }
+        });
+        nextPageBtn.addEventListener('click', () => {
+            // 确保从后端返回的分页信息中检查是否有下一页
+            // 这里的逻辑取决于后端返回的分页信息结构
+            loadShops(currentPage + 1);
+        });
+        loadShops(currentPage);
+
+    });
+
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const mealListBody = document.getElementById('meal-list-body');
+        const mealprevPageBtn = document.getElementById('meal-prev-page');
+        const mealnextPageBtn = document.getElementById('meal-next-page');
+        const mealcurrentPageSpan = document.getElementById('meal-current-page');
+        let mealcurrentPage = 1;//当前页数
+        let pageSize=5;//页面大小
+
+        mealprevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                fetchMeals(mealcurrentPage - 1);
+            }
+        });
+        mealnextPageBtn.addEventListener('click', () => {
+            // 确保从后端返回的分页信息中检查是否有下一页
+            // 这里的逻辑取决于后端返回的分页信息结构
+            fetchMeals(mealcurrentPage + 1);
+        });
+        // 初始化加载第一页数据
+        fetchMeals(mealcurrentPage);
+    });
+    // 获取菜品列表
+    function fetchMeals(sid, page) {
+        const mealListBody = document.getElementById('meal-list-body');
+        const mealprevPageBtn = document.getElementById('meal-prev-page');
+        const mealnextPageBtn = document.getElementById('meal-next-page');
+        const mealcurrentPageSpan = document.getElementById('meal-current-page');
+        let mealcurrentPage = 1;//当前页数
+        let pageSize=5;//页面大小
+        window.sid=sid;
+        fetch(`/Meal/meals?page=${page}&sid=${sid}`, {
+            method: 'GET', // 明确指定请求方法
+        })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // alert(data)
+                const mealpage = data.data; // 假设后端返回的数据直接就是一个 Page 对象的 JSON 表示
+                const records = mealpage.records || [];
+                mealcurrentPage=page;
+                mealcurrentPageSpan.textContent = mealcurrentPage;
+                alert(records.price);
+                window.mealtotalPages = Math.ceil(data.total / pageSize); // 计算总页数
+                if (Array.isArray(records)) {
+                    renderMeals(records);
+                } else {
+                    console.error('Invalid data format or missing records.');
+                }
+            })
+            .catch(error => {
+                console.error('Error fetching shops:', error);
+            });
+    }
+    // 定义渲染菜品列表的函数
+    function renderMeals(meals) {
+        const tbody = document.getElementById('meal-list-body');
+        // alert(records.price);
+
+        tbody.innerHTML = ''; // 清空现有内容
+        meals.forEach(meal => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${meal.name}</td>
+                <td>${meal.description}</td>
+                <td>${meal.price}</td>
+                <td><img src="${meal.img}" alt="${meal.name}" /></td>
+            `;
+            tbody.appendChild(row);
+        });
+    }
+
+    function removeAllActiveClasses() {
+        var pages = document.querySelectorAll('.page');
+        pages.forEach(function(page) {
+            page.classList.remove('active');
+        });
+    }
+
+
+</script>
+
+</body>
+</html>

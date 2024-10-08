@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <title>登录页面</title>
+</head>
+<body>
+<h2>登录</h2>
+<form id="loginForm">
+  <label for="name">用户名:</label>
+  <input type="text" id="name" name="name">
+  <br><br>
+  <label for="password">密码:</label>
+  <input type="password" id="password" name="password">
+  <br><br>
+  <button type="submit">登录</button>
+  <button type="button" onclick="location.href='reg';">注册</button>
+</form>
+<script >
+
+  document.getElementById('loginForm').addEventListener('submit', function(event) {
+    event.preventDefault(); // 阻止表单的默认提交行为
+
+    // 获取表单数据
+    const name = document.getElementById('name').value;
+    const password = document.getElementById('password').value;
+
+    // 创建JSON数据
+    const userData = {
+      name: name,
+      password: password
+    };
+
+    // 转换为JSON字符串
+    const jsonData = JSON.stringify(userData);
+
+    // 发送POST请求到后端
+
+    fetch('/ShopOwner/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: jsonData
+    })
+            .then(response => response.json())
+            .then(data => {
+              const user = data.data;
+              console.log('用户名:', user);
+              console.log('密码:', user);
+              console.log('Sign successful:', data);
+              // 保存数据到sessionStorage
+              sessionStorage.setItem('userData', JSON.stringify(data));
+
+              // 跳转到home.html
+              window.location.href = 'home';
+            })
+            .catch(error => {
+              console.error('Error Sign user:', error);
+            });
+  });
+</script>
+</body>
+</html>
